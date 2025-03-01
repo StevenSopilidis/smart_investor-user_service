@@ -40,10 +40,22 @@ func (s *UserService) FindUserByEmail(email string) (domain.User, error) {
 	return s.repo.FindUserByEmail(email)
 }
 
-func (s *UserService) ValidateEmail(user domain.User) error {
+func (s *UserService) ValidateEmail(email string) error {
+	user, err := s.repo.FindUserByEmail(email)
+
+	if err != nil {
+		return err
+	}
+
 	return s.repo.ValidateEmail(user)
 }
 
-func (s *UserService) DeleteUser(user domain.User) error {
+func (s *UserService) DeleteUser(email string) error {
+	user, err := s.repo.FindUserByEmail(email)
+
+	if err != nil {
+		return err
+	}
+
 	return s.repo.DeleteUser(user)
 }
