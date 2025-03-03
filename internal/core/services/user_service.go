@@ -70,7 +70,11 @@ func (s *UserService) ValidateEmail(email string, verificationCode string) error
 		return err
 	}
 
-	return s.repo.ValidateEmail(user, verificationCode)
+	if user.EmailVerificationCode != verificationCode {
+		return &app_errors.InvalidVerificationCode{}
+	}
+
+	return s.repo.ValidateEmail(user)
 }
 
 func (s *UserService) DeleteUser(email string) error {

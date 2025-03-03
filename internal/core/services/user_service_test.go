@@ -28,6 +28,9 @@ func TestCreateUser(t *testing.T) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
+				generator.EXPECT().Generate(gomock.Any()).
+					Times(1).
+					Return("randomString")
 				mockRepo.EXPECT().CreateUser(gomock.Any()).Times(1)
 			},
 			checkResponse: func(t *testing.T, err error) {
@@ -44,6 +47,8 @@ func TestCreateUser(t *testing.T) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
+				generator.EXPECT().Generate(gomock.Any()).
+					Times(0)
 				mockRepo.EXPECT().CreateUser(gomock.Any()).Times(0)
 			},
 			checkResponse: func(t *testing.T, err error) {
@@ -60,6 +65,8 @@ func TestCreateUser(t *testing.T) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.InternalServerError{})
+				generator.EXPECT().Generate(gomock.Any()).
+					Times(0)
 				mockRepo.EXPECT().CreateUser(gomock.Any()).Times(0)
 			},
 			checkResponse: func(t *testing.T, err error) {
@@ -76,6 +83,9 @@ func TestCreateUser(t *testing.T) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
+				generator.EXPECT().Generate(gomock.Any()).
+					Times(1).
+					Return("Random")
 				mockRepo.EXPECT().CreateUser(gomock.Any()).
 					Times(1).
 					Return(&app_errors.InternalServerError{})
@@ -270,9 +280,10 @@ func TestVerifyEmail(t *testing.T) {
 			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
-					Return(domain.User{}, nil)
-
-				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).
+					Return(domain.User{
+						EmailVerificationCode: "code",
+					}, nil)
+				mockRepo.EXPECT().ValidateEmail(gomock.Any()).
 					Times(1).
 					Return(nil)
 			},
@@ -289,7 +300,7 @@ func TestVerifyEmail(t *testing.T) {
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
 
-				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).Times(0)
+				mockRepo.EXPECT().ValidateEmail(gomock.Any()).Times(0)
 			},
 			checkResponse: func(t *testing.T, err error) {
 				require.ErrorIs(t, err, &app_errors.UserNotFound{})
@@ -303,7 +314,7 @@ func TestVerifyEmail(t *testing.T) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.InternalServerError{})
-				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).Times(0)
+				mockRepo.EXPECT().ValidateEmail(gomock.Any()).Times(0)
 			},
 			checkResponse: func(t *testing.T, err error) {
 				require.ErrorIs(t, err, &app_errors.InternalServerError{})
@@ -316,8 +327,10 @@ func TestVerifyEmail(t *testing.T) {
 			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
-					Return(domain.User{}, nil)
-				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).
+					Return(domain.User{
+						EmailVerificationCode: "code",
+					}, nil)
+				mockRepo.EXPECT().ValidateEmail(gomock.Any()).
 					Times(1).
 					Return(&app_errors.InternalServerError{})
 			},
@@ -333,9 +346,8 @@ func TestVerifyEmail(t *testing.T) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
-				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).
-					Times(1).
-					Return(&app_errors.InvalidVerificationCode{})
+				mockRepo.EXPECT().ValidateEmail(gomock.Any()).
+					Times(0)
 			},
 			checkResponse: func(t *testing.T, err error) {
 				require.ErrorIs(t, err, &app_errors.InvalidVerificationCode{})

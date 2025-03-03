@@ -78,15 +78,15 @@ func (mr *MockIUserRepoMockRecorder) FindUserByEmail(email interface{}) *gomock.
 }
 
 // ValidateEmail mocks base method.
-func (m *MockIUserRepo) ValidateEmail(user domain.User, verificationCode string) error {
+func (m *MockIUserRepo) ValidateEmail(user domain.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateEmail", user, verificationCode)
+	ret := m.ctrl.Call(m, "ValidateEmail", user)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ValidateEmail indicates an expected call of ValidateEmail.
-func (mr *MockIUserRepoMockRecorder) ValidateEmail(user, verificationCode interface{}) *gomock.Call {
+func (mr *MockIUserRepoMockRecorder) ValidateEmail(user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateEmail", reflect.TypeOf((*MockIUserRepo)(nil).ValidateEmail), user, verificationCode)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateEmail", reflect.TypeOf((*MockIUserRepo)(nil).ValidateEmail), user)
 }
