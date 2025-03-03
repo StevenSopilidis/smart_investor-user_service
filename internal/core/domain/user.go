@@ -7,9 +7,10 @@ import (
 )
 
 type User struct {
-	Id            uuid.UUID `gorm:primaryKey`
-	Email         string
-	EmailVerified bool
-	Password      string
-	CreatedAt     time.Time
+	Id                    uuid.UUID `gorm:primaryKey`
+	Email                 string
+	EmailVerified         bool
+	EmailVerificationCode string
+	Password              string
+	CreatedAt             time.Time
 }

@@ -15,7 +15,7 @@ func TestCreateUser(t *testing.T) {
 	testCases := []struct {
 		testName      string
 		user          dtos.CreateUserDto
-		buildStubs    func(mockRepo *mocks.MockIUserRepo)
+		buildStubs    func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator)
 		checkResponse func(t *testing.T, err error)
 	}{
 		{
@@ -24,7 +24,7 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
@@ -40,7 +40,7 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
@@ -56,7 +56,7 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.InternalServerError{})
@@ -72,7 +72,7 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
@@ -92,8 +92,12 @@ func TestCreateUser(t *testing.T) {
 			mockRepo := mocks.NewMockIUserRepo(storeCtrl)
 			defer storeCtrl.Finish()
 
-			tc.buildStubs(mockRepo)
-			userService, err := NewUserService(mockRepo)
+			generatorCtrl := gomock.NewController(t)
+			mockStringGenerator := mocks.NewMockIRandomStringGenerator(generatorCtrl)
+			defer generatorCtrl.Finish()
+
+			tc.buildStubs(mockRepo, mockStringGenerator)
+			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)	
 			require.NoError(t, err)
 			err = userService.CreateUser(tc.user)
 			tc.checkResponse(t, err)
@@ -105,13 +109,13 @@ func TestFindUserByEmail(t *testing.T) {
 	testCases := []struct {
 		testName      string
 		email         string
-		buildStubs    func(mockRepo *mocks.MockIUserRepo)
+		buildStubs    func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator)
 		checkResponse func(t *testing.T, err error)
 	}{
 		{
 			testName: "UserFoundSuccessfully",
 			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
@@ -123,7 +127,7 @@ func TestFindUserByEmail(t *testing.T) {
 		{
 			testName: "UserNotFound",
 			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
@@ -135,7 +139,7 @@ func TestFindUserByEmail(t *testing.T) {
 		{
 			testName: "InternalServerError",
 			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.InternalServerError{})
@@ -152,8 +156,12 @@ func TestFindUserByEmail(t *testing.T) {
 			mockRepo := mocks.NewMockIUserRepo(storeCtrl)
 			defer storeCtrl.Finish()
 
-			tc.buildStubs(mockRepo)
-			userService, err := NewUserService(mockRepo)
+			generatorCtrl := gomock.NewController(t)
+			mockStringGenerator := mocks.NewMockIRandomStringGenerator(generatorCtrl)
+			defer generatorCtrl.Finish()
+
+			tc.buildStubs(mockRepo, mockStringGenerator)
+			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)
 			require.NoError(t, err)
 			_, err = userService.FindUserByEmail(tc.email)
 			tc.checkResponse(t, err)
@@ -165,13 +173,13 @@ func TestDeleteUser(t *testing.T) {
 	testCases := []struct {
 		testName      string
 		email         string
-		buildStubs    func(mockRepo *mocks.MockIUserRepo)
+		buildStubs    func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator)
 		checkResponse func(t *testing.T, err error)
 	}{
 		{
 			testName: "UserDeletedSuccessfully",
 			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
@@ -187,7 +195,7 @@ func TestDeleteUser(t *testing.T) {
 		{
 			testName: "UserNotFound",
 			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
@@ -201,7 +209,7 @@ func TestDeleteUser(t *testing.T) {
 		{
 			testName: "InternalServerErrorFromFindUserByEmail",
 			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.InternalServerError{})
@@ -214,7 +222,7 @@ func TestDeleteUser(t *testing.T) {
 		{
 			testName: "InternalServerErrorFromDeleteUser",
 			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
@@ -234,8 +242,12 @@ func TestDeleteUser(t *testing.T) {
 			mockRepo := mocks.NewMockIUserRepo(storeCtrl)
 			defer storeCtrl.Finish()
 
-			tc.buildStubs(mockRepo)
-			userService, err := NewUserService(mockRepo)
+			generatorCtrl := gomock.NewController(t)
+			mockStringGenerator := mocks.NewMockIRandomStringGenerator(generatorCtrl)
+			defer generatorCtrl.Finish()
+
+			tc.buildStubs(mockRepo, mockStringGenerator)
+			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)
 			require.NoError(t, err)
 			err = userService.DeleteUser(tc.email)
 			tc.checkResponse(t, err)
@@ -245,20 +257,22 @@ func TestDeleteUser(t *testing.T) {
 
 func TestVerifyEmail(t *testing.T) {
 	testCases := []struct {
-		testName      string
-		email         string
-		buildStubs    func(mockRepo *mocks.MockIUserRepo)
-		checkResponse func(t *testing.T, err error)
+		testName         string
+		email            string
+		verificationCode string
+		buildStubs       func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator)
+		checkResponse    func(t *testing.T, err error)
 	}{
 		{
-			testName: "EmailVerifiedSuccessfully",
-			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			testName:         "EmailVerifiedSuccessfully",
+			email:            "test@test.com",
+			verificationCode: "code",
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
 
-				mockRepo.EXPECT().ValidateEmail(gomock.Any()).
+				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(nil)
 			},
@@ -267,45 +281,64 @@ func TestVerifyEmail(t *testing.T) {
 			},
 		},
 		{
-			testName: "UserNotFound",
-			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			testName:         "UserNotFound",
+			email:            "test@test.com",
+			verificationCode: "code",
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
 
-				mockRepo.EXPECT().ValidateEmail(gomock.Any()).Times(0)
+				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).Times(0)
 			},
 			checkResponse: func(t *testing.T, err error) {
 				require.ErrorIs(t, err, &app_errors.UserNotFound{})
 			},
 		},
 		{
-			testName: "InternalServerErrorFromFindUserByEmail",
-			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			testName:         "InternalServerErrorFromFindUserByEmail",
+			email:            "test@test.com",
+			verificationCode: "code",
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.InternalServerError{})
-				mockRepo.EXPECT().ValidateEmail(gomock.Any()).Times(0)
+				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).Times(0)
 			},
 			checkResponse: func(t *testing.T, err error) {
 				require.ErrorIs(t, err, &app_errors.InternalServerError{})
 			},
 		},
 		{
-			testName: "InternalServerErrorFromValidateEmail",
-			email:    "test@test.com",
-			buildStubs: func(mockRepo *mocks.MockIUserRepo) {
+			testName:         "InternalServerErrorFromValidateEmail",
+			email:            "test@test.com",
+			verificationCode: "code",
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
-				mockRepo.EXPECT().ValidateEmail(gomock.Any()).
+				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).
 					Times(1).
 					Return(&app_errors.InternalServerError{})
 			},
 			checkResponse: func(t *testing.T, err error) {
 				require.ErrorIs(t, err, &app_errors.InternalServerError{})
+			},
+		},
+		{
+			testName:         "InvalidVerificationCode",
+			email:            "test@test.com",
+			verificationCode: "code",
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
+				mockRepo.EXPECT().FindUserByEmail("test@test.com").
+					Times(1).
+					Return(domain.User{}, nil)
+				mockRepo.EXPECT().ValidateEmail(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(&app_errors.InvalidVerificationCode{})
+			},
+			checkResponse: func(t *testing.T, err error) {
+				require.ErrorIs(t, err, &app_errors.InvalidVerificationCode{})
 			},
 		},
 	}
@@ -316,10 +349,14 @@ func TestVerifyEmail(t *testing.T) {
 			mockRepo := mocks.NewMockIUserRepo(storeCtrl)
 			defer storeCtrl.Finish()
 
-			tc.buildStubs(mockRepo)
-			userService, err := NewUserService(mockRepo)
+			generatorCtrl := gomock.NewController(t)
+			mockStringGenerator := mocks.NewMockIRandomStringGenerator(generatorCtrl)
+			defer generatorCtrl.Finish()
+
+			tc.buildStubs(mockRepo, mockStringGenerator)
+			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)
 			require.NoError(t, err)
-			err = userService.ValidateEmail(tc.email)
+			err = userService.ValidateEmail(tc.email, tc.verificationCode)
 			tc.checkResponse(t, err)
 		})
 	}
