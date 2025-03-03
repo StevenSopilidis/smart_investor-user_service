@@ -97,9 +97,9 @@ func TestCreateUser(t *testing.T) {
 			defer generatorCtrl.Finish()
 
 			tc.buildStubs(mockRepo, mockStringGenerator)
-			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)	
+			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)
 			require.NoError(t, err)
-			err = userService.CreateUser(tc.user)
+			_, err = userService.CreateUser(tc.user)
 			tc.checkResponse(t, err)
 		})
 	}

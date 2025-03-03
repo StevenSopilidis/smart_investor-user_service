@@ -30,25 +30,33 @@ func NewUserService(
 	}, nil
 }
 
-func (s *UserService) CreateUser(dto dtos.CreateUserDto) error {
+func (s *UserService) CreateUser(dto dtos.CreateUserDto) (domain.User, error) {
 	_, err := s.repo.FindUserByEmail(dto.Email)
 
 	if errors.Is(err, &app_errors.UserNotFound{}) {
-		return s.repo.CreateUser(domain.User{
+		user := domain.User{
 			Id:                    uuid.New(),
 			Email:                 dto.Email,
 			Password:              dto.Password,
 			CreatedAt:             time.Now(),
 			EmailVerified:         false,
 			EmailVerificationCode: s.stringGenerator.Generate(int(s.emailVerificationCodeLength)),
-		})
+		}
+
+		err = s.repo.CreateUser(user)
+
+		if err != nil {
+			return domain.User{}, err
+		}
+
+		return user, nil
 	}
 
 	if err == nil {
-		return &app_errors.EmailOrPasswordAlreadyExist{}
+		return domain.User{}, &app_errors.EmailOrPasswordAlreadyExist{}
 	}
 
-	return err
+	return domain.User{}, err
 }
 
 func (s *UserService) FindUserByEmail(email string) (domain.User, error) {
