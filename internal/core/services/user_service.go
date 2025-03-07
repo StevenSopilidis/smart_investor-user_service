@@ -37,7 +37,6 @@ func (s *UserService) CreateUser(dto dtos.CreateUserDto) (domain.User, error) {
 		user := domain.User{
 			Id:                    uuid.New(),
 			Email:                 dto.Email,
-			Password:              dto.Password,
 			CreatedAt:             time.Now(),
 			EmailVerified:         false,
 			EmailVerificationCode: s.stringGenerator.Generate(int(s.emailVerificationCodeLength)),
