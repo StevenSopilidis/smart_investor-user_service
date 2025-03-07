@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package v1_user_service;
+
+option go_package = "gitlab.com/stevensopi/smart_investor/user_service/internal/adapters/grpc/generated";
+
+message DeleteUserRequest {
+    string Email = 1;
+}
+
+message DeleteUserResponse {}

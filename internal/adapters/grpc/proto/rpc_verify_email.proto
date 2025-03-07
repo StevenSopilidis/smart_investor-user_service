@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package v1_user_service;
+
+option go_package = "gitlab.com/stevensopi/smart_investor/user_service/internal/adapters/grpc/generated";
+
+message VerifyEmailRequest {
+    string Email = 1;
+    string EmailVerificiationCode = 2;
+}
+
+message VerifyEmailResponse {}
