@@ -57,7 +57,6 @@ func createUserAndTest(t *testing.T) domain.User {
 	user := domain.User{
 		Id:                    uuid.New(),
 		Email:                 generateRandomEmail(),
-		Password:              generateRandomPassword(),
 		EmailVerified:         false,
 		EmailVerificationCode: generateRandomString(20),
 		CreatedAt:             time.Now(),
@@ -70,7 +69,6 @@ func createUserAndTest(t *testing.T) domain.User {
 	require.NoError(t, err)
 	require.Equal(t, user.Id, result.Id)
 	require.Equal(t, user.Email, result.Email)
-	require.Equal(t, user.Password, result.Password)
 	require.Equal(t, user.EmailVerificationCode, result.EmailVerificationCode)
 	require.WithinDuration(t, user.CreatedAt, result.CreatedAt, time.Second)
 	require.Equal(t, user.EmailVerified, result.EmailVerified)

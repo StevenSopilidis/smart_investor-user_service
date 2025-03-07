@@ -22,8 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserGrpcServiceClient interface {
-	// rpc CreateUser  (CreateUserRequest) returns (CreateUserResponse);
-	// rpc DeleteUser  (DeleteUserRequest) returns (DeleteUserResponse);
+	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
+	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
 	VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*VerifyEmailResponse, error)
 }
 
@@ -33,6 +33,24 @@ type userGrpcServiceClient struct {
 
 func NewUserGrpcServiceClient(cc grpc.ClientConnInterface) UserGrpcServiceClient {
 	return &userGrpcServiceClient{cc}
+}
+
+func (c *userGrpcServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error) {
+	out := new(CreateUserResponse)
+	err := c.cc.Invoke(ctx, "/v1_user_service.UserGrpcService/CreateUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userGrpcServiceClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error) {
+	out := new(DeleteUserResponse)
+	err := c.cc.Invoke(ctx, "/v1_user_service.UserGrpcService/DeleteUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *userGrpcServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*VerifyEmailResponse, error) {
@@ -48,8 +66,8 @@ func (c *userGrpcServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmail
 // All implementations must embed UnimplementedUserGrpcServiceServer
 // for forward compatibility
 type UserGrpcServiceServer interface {
-	// rpc CreateUser  (CreateUserRequest) returns (CreateUserResponse);
-	// rpc DeleteUser  (DeleteUserRequest) returns (DeleteUserResponse);
+	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
+	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
 	VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error)
 	mustEmbedUnimplementedUserGrpcServiceServer()
 }
@@ -58,6 +76,12 @@ type UserGrpcServiceServer interface {
 type UnimplementedUserGrpcServiceServer struct {
 }
 
+func (UnimplementedUserGrpcServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
+}
+func (UnimplementedUserGrpcServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
+}
 func (UnimplementedUserGrpcServiceServer) VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyEmail not implemented")
 }
@@ -72,6 +96,42 @@ type UnsafeUserGrpcServiceServer interface {
 
 func RegisterUserGrpcServiceServer(s grpc.ServiceRegistrar, srv UserGrpcServiceServer) {
 	s.RegisterService(&UserGrpcService_ServiceDesc, srv)
+}
+
+func _UserGrpcService_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserGrpcServiceServer).CreateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1_user_service.UserGrpcService/CreateUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserGrpcServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserGrpcService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserGrpcServiceServer).DeleteUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1_user_service.UserGrpcService/DeleteUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserGrpcServiceServer).DeleteUser(ctx, req.(*DeleteUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _UserGrpcService_VerifyEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -99,6 +159,14 @@ var UserGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "v1_user_service.UserGrpcService",
 	HandlerType: (*UserGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateUser",
+			Handler:    _UserGrpcService_CreateUser_Handler,
+		},
+		{
+			MethodName: "DeleteUser",
+			Handler:    _UserGrpcService_DeleteUser_Handler,
+		},
 		{
 			MethodName: "VerifyEmail",
 			Handler:    _UserGrpcService_VerifyEmail_Handler,
