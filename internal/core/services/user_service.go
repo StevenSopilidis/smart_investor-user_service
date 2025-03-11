@@ -34,12 +34,18 @@ func (s *UserService) CreateUser(dto dtos.CreateUserDto) (domain.User, error) {
 	_, err := s.repo.FindUserByEmail(dto.Email)
 
 	if errors.Is(err, &app_errors.UserNotFound{}) {
+		verificationCode, err := s.stringGenerator.Generate(int(s.emailVerificationCodeLength))
+
+		if err != nil {
+			return domain.User{}, &app_errors.InternalServerError{}
+		}
+
 		user := domain.User{
 			Id:                    uuid.New(),
 			Email:                 dto.Email,
 			CreatedAt:             time.Now(),
 			EmailVerified:         false,
-			EmailVerificationCode: s.stringGenerator.Generate(int(s.emailVerificationCodeLength)),
+			EmailVerificationCode: verificationCode,
 		}
 
 		err = s.repo.CreateUser(user)

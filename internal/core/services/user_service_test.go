@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -30,7 +31,7 @@ func TestCreateUser(t *testing.T) {
 					Return(domain.User{}, &app_errors.UserNotFound{})
 				generator.EXPECT().Generate(gomock.Any()).
 					Times(1).
-					Return("randomString")
+					Return("randomString", nil)
 				mockRepo.EXPECT().CreateUser(gomock.Any()).Times(1)
 			},
 			checkResponse: func(t *testing.T, err error) {
@@ -74,6 +75,25 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
+			testName: "InternalServerReturnedWhenStringGeneratorReturnsError",
+			user: dtos.CreateUserDto{
+				Email:    "test@test.com",
+				Password: "test1235",
+			},
+			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
+				mockRepo.EXPECT().FindUserByEmail("test@test.com").
+					Times(1).
+					Return(domain.User{}, &app_errors.UserNotFound{})
+
+				generator.EXPECT().Generate(gomock.Any()).
+					Times(1).
+					Return("", fmt.Errorf("Error generating string"))
+			},
+			checkResponse: func(t *testing.T, err error) {
+				require.ErrorIs(t, err, &app_errors.InternalServerError{})
+			},
+		},
+		{
 			testName: "InternalServerErrorFromCreateUser",
 			user: dtos.CreateUserDto{
 				Email:    "test@test.com",
@@ -85,7 +105,7 @@ func TestCreateUser(t *testing.T) {
 					Return(domain.User{}, &app_errors.UserNotFound{})
 				generator.EXPECT().Generate(gomock.Any()).
 					Times(1).
-					Return("Random")
+					Return("Random", nil)
 				mockRepo.EXPECT().CreateUser(gomock.Any()).
 					Times(1).
 					Return(&app_errors.InternalServerError{})

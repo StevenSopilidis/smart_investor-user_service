@@ -1,5 +1,5 @@
 package ports
 
 type IRandomStringGenerator interface {
-	Generate(length int) string
+	Generate(length int) (string, error)
 }
