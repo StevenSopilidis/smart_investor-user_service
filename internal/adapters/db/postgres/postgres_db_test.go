@@ -19,7 +19,7 @@ import (
 func generateRandomString(n int) string {
 	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	var sb strings.Builder
-	for i := 0; i < 10; i++ {
+	for i := 0; i < n; i++ {
 		randNum, _ := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
 		sb.WriteByte(letters[randNum.Int64()])
 	}

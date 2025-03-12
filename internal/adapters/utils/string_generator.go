@@ -5,11 +5,17 @@ import (
 	"math/big"
 )
 
-type StringGenerator struct{}
+type StringGenerator struct{
+	
+}
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 	"0123456789"
+
+func NewStringGenerator() *StringGenerator {
+	return &StringGenerator{}
+}
 
 func (g *StringGenerator) Generate(length int) (string, error) {
 	result := make([]byte, length)
