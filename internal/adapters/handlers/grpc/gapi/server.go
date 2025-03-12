@@ -8,11 +8,11 @@ import (
 
 type Server struct {
 	generated.UnimplementedUserGrpcServiceServer
-	user_service services.UserService
+	user_service *services.UserService
 	config       config.Config
 }
 
-func NewServer(user_service services.UserService, config config.Config) *Server {
+func NewServer(user_service *services.UserService, config config.Config) *Server {
 	return &Server{
 		user_service: user_service,
 		config:       config,

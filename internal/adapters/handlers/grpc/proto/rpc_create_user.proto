@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package v1_user_service;
 
 option go_package = "gitlab.com/stevensopi/smart_investor/user_service/internal/adapters/grpc/generated";
@@ -9,4 +11,10 @@ message CreateUserRequest {
     string Password = 2;
 }
 
-message CreateUserResponse {}
+message CreateUserResponse {
+    string Id = 1;
+    string Email = 2;
+    bool EmailVerified = 3;
+    string EmailVerificationCode = 4;
+    google.protobuf.Timestamp CreatedAt = 5;
+}

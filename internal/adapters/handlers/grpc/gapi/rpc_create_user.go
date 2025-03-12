@@ -7,16 +7,17 @@ import (
 	"gitlab.com/stevensopi/smart_investor/user_service/internal/adapters/handlers/grpc/generated"
 	"gitlab.com/stevensopi/smart_investor/user_service/internal/core/dtos"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (server *Server) CreateUser(ctx context.Context, req *generated.CreateUserRequest) (*generated.CreateUserResponse, error) {
 	violations := vefifyCreateUserRequest(req)
 
-	if violations != nil {
+	if len(violations) > 0 {
 		return nil, getErrorResponseFromFieldViolations(violations)
 	}
 
-	_, err := server.user_service.CreateUser(dtos.CreateUserDto{
+	user, err := server.user_service.CreateUser(dtos.CreateUserDto{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -25,7 +26,13 @@ func (server *Server) CreateUser(ctx context.Context, req *generated.CreateUserR
 		return nil, getErrorResponseFromUserServiceError(err)
 	}
 
-	return &generated.CreateUserResponse{}, nil
+	return &generated.CreateUserResponse{
+		Id:                    user.Id.String(),
+		Email:                 user.Email,
+		EmailVerified:         user.EmailVerified,
+		EmailVerificationCode: user.EmailVerificationCode,
+		CreatedAt:             timestamppb.New(user.CreatedAt),
+	}, nil
 }
 
 func vefifyCreateUserRequest(req *generated.CreateUserRequest) (violations []*errdetails.BadRequest_FieldViolation) {
