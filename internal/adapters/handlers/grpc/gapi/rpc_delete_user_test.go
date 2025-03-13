@@ -1,6 +1,7 @@
 package gapi
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,7 @@ import (
 func TestValidUserReturnsOK(t *testing.T) {
 	res, _ := createValidUser(t)
 
-	_, err := server.DeleteUser(&generated.DeleteUserRequest{
+	_, err := server.DeleteUser(context.Background(), &generated.DeleteUserRequest{
 		Email: res.Email,
 	})
 
@@ -23,7 +24,7 @@ func TestValidUserReturnsOK(t *testing.T) {
 }
 
 func TestInvalidUserReturnsNotFound(t *testing.T) {
-	_, err := server.DeleteUser(&generated.DeleteUserRequest{
+	_, err := server.DeleteUser(context.Background(), &generated.DeleteUserRequest{
 		Email: "invalid@test.com",
 	})
 
