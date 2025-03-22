@@ -32,5 +32,5 @@ func TestFindInvalidUserReturnsNotFound(t *testing.T) {
 	require.Error(t, err)
 	status, ok := status.FromError(err)
 	require.True(t, ok)
-	require.Equal(t, codes.NotFound, status)
+	require.Equal(t, codes.NotFound, status.Code())
 }
