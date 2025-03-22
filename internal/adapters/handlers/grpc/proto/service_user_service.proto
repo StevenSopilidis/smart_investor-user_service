@@ -5,6 +5,7 @@ package v1_user_service;
 import "rpc_create_user.proto";
 import "rpc_delete_user.proto";
 import "rpc_verify_email.proto";
+import "rpc_find_user_by_email.proto";
 
 option go_package = "gitlab.com/stevensopi/smart_investor/user_service/internal/adapters/grpc/generated";
 
@@ -12,4 +13,6 @@ service UserGrpcService {
     rpc CreateUser  (CreateUserRequest) returns (CreateUserResponse);
     rpc DeleteUser  (DeleteUserRequest) returns (DeleteUserResponse);
     rpc VerifyEmail (VerifyEmailRequest) returns (VerifyEmailResponse);
+    rpc FindUserByEmail (FindUserByEmailRequest) returns (FindUserByEmailResponse);
+
 }

@@ -25,6 +25,7 @@ type UserGrpcServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
 	VerifyEmail(ctx context.Context, in *VerifyEmailRequest, opts ...grpc.CallOption) (*VerifyEmailResponse, error)
+	FindUserByEmail(ctx context.Context, in *FindUserByEmailRequest, opts ...grpc.CallOption) (*FindUserByEmailResponse, error)
 }
 
 type userGrpcServiceClient struct {
@@ -62,6 +63,15 @@ func (c *userGrpcServiceClient) VerifyEmail(ctx context.Context, in *VerifyEmail
 	return out, nil
 }
 
+func (c *userGrpcServiceClient) FindUserByEmail(ctx context.Context, in *FindUserByEmailRequest, opts ...grpc.CallOption) (*FindUserByEmailResponse, error) {
+	out := new(FindUserByEmailResponse)
+	err := c.cc.Invoke(ctx, "/v1_user_service.UserGrpcService/FindUserByEmail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserGrpcServiceServer is the server API for UserGrpcService service.
 // All implementations must embed UnimplementedUserGrpcServiceServer
 // for forward compatibility
@@ -69,6 +79,7 @@ type UserGrpcServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
 	VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error)
+	FindUserByEmail(context.Context, *FindUserByEmailRequest) (*FindUserByEmailResponse, error)
 	mustEmbedUnimplementedUserGrpcServiceServer()
 }
 
@@ -84,6 +95,9 @@ func (UnimplementedUserGrpcServiceServer) DeleteUser(context.Context, *DeleteUse
 }
 func (UnimplementedUserGrpcServiceServer) VerifyEmail(context.Context, *VerifyEmailRequest) (*VerifyEmailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyEmail not implemented")
+}
+func (UnimplementedUserGrpcServiceServer) FindUserByEmail(context.Context, *FindUserByEmailRequest) (*FindUserByEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindUserByEmail not implemented")
 }
 func (UnimplementedUserGrpcServiceServer) mustEmbedUnimplementedUserGrpcServiceServer() {}
 
@@ -152,6 +166,24 @@ func _UserGrpcService_VerifyEmail_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserGrpcService_FindUserByEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindUserByEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserGrpcServiceServer).FindUserByEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1_user_service.UserGrpcService/FindUserByEmail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserGrpcServiceServer).FindUserByEmail(ctx, req.(*FindUserByEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserGrpcService_ServiceDesc is the grpc.ServiceDesc for UserGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +202,10 @@ var UserGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyEmail",
 			Handler:    _UserGrpcService_VerifyEmail_Handler,
+		},
+		{
+			MethodName: "FindUserByEmail",
+			Handler:    _UserGrpcService_FindUserByEmail_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
