@@ -11,5 +11,6 @@ type User struct {
 	Email                 string
 	EmailVerified         bool
 	EmailVerificationCode string
+	Password              string
 	CreatedAt             time.Time
 }

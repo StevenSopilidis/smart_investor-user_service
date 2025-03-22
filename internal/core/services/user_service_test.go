@@ -14,9 +14,13 @@ import (
 
 func TestCreateUser(t *testing.T) {
 	testCases := []struct {
-		testName      string
-		user          dtos.CreateUserDto
-		buildStubs    func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator)
+		testName   string
+		user       dtos.CreateUserDto
+		buildStubs func(
+			mockRepo *mocks.MockIUserRepo,
+			generator *mocks.MockIRandomStringGenerator,
+			mockHashService *mocks.MockIPasswordHashService,
+		)
 		checkResponse func(t *testing.T, err error)
 	}{
 		{
@@ -25,10 +29,17 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
+			buildStubs: func(
+				mockRepo *mocks.MockIUserRepo,
+				generator *mocks.MockIRandomStringGenerator,
+				mockHashService *mocks.MockIPasswordHashService,
+			) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
+				mockHashService.EXPECT().HashPassword(gomock.Any()).
+					Times(1).
+					Return("hash", nil)
 				generator.EXPECT().Generate(gomock.Any()).
 					Times(1).
 					Return("randomString", nil)
@@ -44,11 +55,17 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
+			buildStubs: func(
+				mockRepo *mocks.MockIUserRepo,
+				generator *mocks.MockIRandomStringGenerator,
+				mockHashService *mocks.MockIPasswordHashService,
+			) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, nil)
 				generator.EXPECT().Generate(gomock.Any()).
+					Times(0)
+				mockHashService.EXPECT().HashPassword(gomock.Any()).
 					Times(0)
 				mockRepo.EXPECT().CreateUser(gomock.Any()).Times(0)
 			},
@@ -62,11 +79,17 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
+			buildStubs: func(
+				mockRepo *mocks.MockIUserRepo,
+				generator *mocks.MockIRandomStringGenerator,
+				mockHashService *mocks.MockIPasswordHashService,
+			) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.InternalServerError{})
 				generator.EXPECT().Generate(gomock.Any()).
+					Times(0)
+				mockHashService.EXPECT().HashPassword(gomock.Any()).
 					Times(0)
 				mockRepo.EXPECT().CreateUser(gomock.Any()).Times(0)
 			},
@@ -80,11 +103,16 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
+			buildStubs: func(
+				mockRepo *mocks.MockIUserRepo,
+				generator *mocks.MockIRandomStringGenerator,
+				mockHashService *mocks.MockIPasswordHashService,
+			) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
-
+				mockHashService.EXPECT().HashPassword(gomock.Any()).
+					Times(0)
 				generator.EXPECT().Generate(gomock.Any()).
 					Times(1).
 					Return("", fmt.Errorf("Error generating string"))
@@ -99,13 +127,20 @@ func TestCreateUser(t *testing.T) {
 				Email:    "test@test.com",
 				Password: "test1235",
 			},
-			buildStubs: func(mockRepo *mocks.MockIUserRepo, generator *mocks.MockIRandomStringGenerator) {
+			buildStubs: func(
+				mockRepo *mocks.MockIUserRepo,
+				generator *mocks.MockIRandomStringGenerator,
+				mockHashService *mocks.MockIPasswordHashService,
+			) {
 				mockRepo.EXPECT().FindUserByEmail("test@test.com").
 					Times(1).
 					Return(domain.User{}, &app_errors.UserNotFound{})
 				generator.EXPECT().Generate(gomock.Any()).
 					Times(1).
 					Return("Random", nil)
+				mockHashService.EXPECT().HashPassword(gomock.Any()).
+					Times(1).
+					Return("hash", nil)
 				mockRepo.EXPECT().CreateUser(gomock.Any()).
 					Times(1).
 					Return(&app_errors.InternalServerError{})
@@ -126,8 +161,12 @@ func TestCreateUser(t *testing.T) {
 			mockStringGenerator := mocks.NewMockIRandomStringGenerator(generatorCtrl)
 			defer generatorCtrl.Finish()
 
-			tc.buildStubs(mockRepo, mockStringGenerator)
-			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)
+			hashServiceCtrl := gomock.NewController(t)
+			mockHashService := mocks.NewMockIPasswordHashService(hashServiceCtrl)
+			defer hashServiceCtrl.Finish()
+
+			tc.buildStubs(mockRepo, mockStringGenerator, mockHashService)
+			userService, err := NewUserService(mockRepo, mockStringGenerator, mockHashService, 10)
 			require.NoError(t, err)
 			_, err = userService.CreateUser(tc.user)
 			tc.checkResponse(t, err)
@@ -190,8 +229,12 @@ func TestFindUserByEmail(t *testing.T) {
 			mockStringGenerator := mocks.NewMockIRandomStringGenerator(generatorCtrl)
 			defer generatorCtrl.Finish()
 
+			hashServiceCtrl := gomock.NewController(t)
+			mockHashService := mocks.NewMockIPasswordHashService(hashServiceCtrl)
+			defer hashServiceCtrl.Finish()
+
 			tc.buildStubs(mockRepo, mockStringGenerator)
-			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)
+			userService, err := NewUserService(mockRepo, mockStringGenerator, mockHashService, 10)
 			require.NoError(t, err)
 			_, err = userService.FindUserByEmail(tc.email)
 			tc.checkResponse(t, err)
@@ -276,8 +319,12 @@ func TestDeleteUser(t *testing.T) {
 			mockStringGenerator := mocks.NewMockIRandomStringGenerator(generatorCtrl)
 			defer generatorCtrl.Finish()
 
+			hashServiceCtrl := gomock.NewController(t)
+			mockHashService := mocks.NewMockIPasswordHashService(hashServiceCtrl)
+			defer hashServiceCtrl.Finish()
+
 			tc.buildStubs(mockRepo, mockStringGenerator)
-			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)
+			userService, err := NewUserService(mockRepo, mockStringGenerator, mockHashService, 10)
 			require.NoError(t, err)
 			err = userService.DeleteUser(tc.email)
 			tc.checkResponse(t, err)
@@ -385,8 +432,12 @@ func TestVerifyEmail(t *testing.T) {
 			mockStringGenerator := mocks.NewMockIRandomStringGenerator(generatorCtrl)
 			defer generatorCtrl.Finish()
 
+			hashServiceCtrl := gomock.NewController(t)
+			mockHashService := mocks.NewMockIPasswordHashService(hashServiceCtrl)
+			defer hashServiceCtrl.Finish()
+
 			tc.buildStubs(mockRepo, mockStringGenerator)
-			userService, err := NewUserService(mockRepo, mockStringGenerator, 10)
+			userService, err := NewUserService(mockRepo, mockStringGenerator, mockHashService, 10)
 			require.NoError(t, err)
 			err = userService.ValidateEmail(tc.email, tc.verificationCode)
 			tc.checkResponse(t, err)

@@ -24,8 +24,9 @@ func TestMain(m *testing.M) {
 	}
 
 	generator := utils.NewStringGenerator()
+	hashService := utils.NewBcryptPasswordHashService()
 
-	user_service, err := services.NewUserService(postgresRepo, generator, 10)
+	user_service, err := services.NewUserService(postgresRepo, generator, hashService, 10)
 	if err != nil {
 		log.Fatal("Could not create user_service: ", err)
 	}

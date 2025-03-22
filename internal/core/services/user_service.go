@@ -14,18 +14,21 @@ import (
 type UserService struct {
 	repo                        ports.IUserRepo
 	stringGenerator             ports.IRandomStringGenerator
+	hashService                 ports.IPasswordHashService
 	emailVerificationCodeLength uint8
 }
 
 func NewUserService(
 	repo ports.IUserRepo,
 	stringGenerator ports.IRandomStringGenerator,
+	hashService ports.IPasswordHashService,
 	emailVerificationCodeLength uint8,
 ) (*UserService, error) {
 
 	return &UserService{
 		repo:                        repo,
 		stringGenerator:             stringGenerator,
+		hashService:                 hashService,
 		emailVerificationCodeLength: emailVerificationCodeLength,
 	}, nil
 }
@@ -40,10 +43,16 @@ func (s *UserService) CreateUser(dto dtos.CreateUserDto) (domain.User, error) {
 			return domain.User{}, &app_errors.InternalServerError{}
 		}
 
+		hash, err := s.hashService.HashPassword(dto.Password)
+		if err != nil {
+			return domain.User{}, err
+		}
+
 		user := domain.User{
 			Id:                    uuid.New(),
 			Email:                 dto.Email,
 			CreatedAt:             time.Now(),
+			Password:              hash,
 			EmailVerified:         false,
 			EmailVerificationCode: verificationCode,
 		}

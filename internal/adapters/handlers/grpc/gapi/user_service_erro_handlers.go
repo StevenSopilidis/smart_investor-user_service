@@ -10,13 +10,13 @@ func getErrorResponseFromUserServiceError(err error) error {
 	switch e := err.(type) {
 	case *app_errors.EmailOrPasswordAlreadyExist:
 		return status.Errorf(codes.AlreadyExists, e.Error())
-	case *app_errors.InternalServerError:
-		return status.Errorf(codes.Internal, e.Error())
 	case *app_errors.InvalidVerificationCode:
 		return status.Errorf(codes.InvalidArgument, e.Error())
 	case *app_errors.UserNotFound:
 		return status.Errorf(codes.NotFound, e.Error())
+	case *app_errors.InvalidPassword:
+		return status.Errorf(codes.Unauthenticated, e.Error())
+	default:
+		return status.Errorf(codes.Internal, e.Error())
 	}
-
-	return status.Errorf(codes.Internal, err.Error())
 }

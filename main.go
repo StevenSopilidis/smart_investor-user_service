@@ -22,8 +22,15 @@ func main() {
 	}
 
 	stringGenerator := utils.NewStringGenerator()
+	hashService := utils.NewBcryptPasswordHashService()
 
-	user_service, err := services.NewUserService(repo, stringGenerator, config.EmailVerificationCodeLength)
+	user_service, err := services.NewUserService(
+		repo,
+		stringGenerator,
+		hashService,
+		config.EmailVerificationCodeLength,
+	)
+
 	if err != nil {
 		log.Fatal("---> Could not create user_service: ", err)
 	}
